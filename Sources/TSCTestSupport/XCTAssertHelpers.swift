@@ -153,13 +153,6 @@ public func XCTAssertResultFailure<Success, Failure: Error>(
     }
 }
 
-public func XCTAssertNoDiagnostics(_ engine: DiagnosticsEngine, file: StaticString = #file, line: UInt = #line) {
-    let diagnostics = engine.diagnostics
-    if diagnostics.isEmpty { return }
-    let diags = engine.diagnostics.map({ "- " + $0.description }).joined(separator: "\n")
-    XCTFail("Found unexpected diagnostics: \n\(diags)", file: file, line: line)
-}
-
 public func XCTAssertEqual<T:Equatable, U:Equatable> (_ lhs:(T,U), _ rhs:(T,U), file: StaticString = #file, line: UInt = #line) {
     XCTAssertEqual(lhs.0, rhs.0)
     XCTAssertEqual(lhs.1, rhs.1)

@@ -104,12 +104,6 @@ let package = Package(
             dependencies: ["TSCTestSupport", "TSCclibc"],
             exclude: ["processInputs", "Inputs"]),
         .testTarget(
-            name: "TSCBasicPerformanceTests",
-            dependencies: ["TSCBasic", "TSCTestSupport"]),
-        .testTarget(
-            name: "TSCTestSupportTests",
-            dependencies: ["TSCTestSupport"]),
-        .testTarget(
             name: "TSCUtilityTests",
             dependencies: ["TSCUtility", "TSCTestSupport"],
             exclude: ["pkgconfigInputs", "Inputs"]),

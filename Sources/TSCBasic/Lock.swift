@@ -11,36 +11,11 @@
 import Foundation
 import TSCLibc
 
-@available(*, deprecated, message: "Use NSLock directly instead. SPM has a withLock extension function" )
-/// A simple lock wrapper.
-public struct Lock {
-    private let _lock = NSLock()
-
-    /// Create a new lock.
-    public init() {
-    }
-
-    func lock() {
-        _lock.lock()
-    }
-
-    func unlock() {
-        _lock.unlock()
-    }
-
+extension NSLock {
     /// Execute the given block while holding the lock.
-    public func withLock<T> (_ body: () throws -> T) rethrows -> T {
+    @discardableResult public func withLock<T>(_ body: () throws -> T) rethrows -> T {
         lock()
         defer { unlock() }
-        return try body()
-    }
-}
-
-// for internal usage
-extension NSLock {
-    internal func withLock<T> (_ body: () throws -> T) rethrows -> T {
-        self.lock()
-        defer { self.unlock() }
         return try body()
     }
 }
@@ -79,11 +54,6 @@ public final class FileLock {
     /// Note: The parent directory path should be a valid directory.
     public init(at lockFile: AbsolutePath) {
         self.lockFile = lockFile
-    }
-
-    @available(*, deprecated, message: "use init(at:) instead")
-    public convenience init(name: String, cachePath: AbsolutePath) {
-        self.init(at: cachePath.appending(component: name + ".lock"))
     }
 
     /// Try to acquire a lock. This method will block until lock the already aquired by other process.

@@ -40,13 +40,3 @@ public func tsc_await<T>(_ body: (@escaping (T) -> Void) -> Void) -> T {
     }
     return result!
 }
-
-@available(*, deprecated, renamed: "tsc_await")
-public func await<T, ErrorType>(_ body: (@escaping (Result<T, ErrorType>) -> Void) -> Void) throws -> T {
-    return try tsc_await(body).get()
-}
-
-@available(*, deprecated, renamed: "tsc_await")
-public func await<T>(_ body: (@escaping (T) -> Void) -> Void) -> T {
-  return tsc_await(body)
-}

@@ -17,7 +17,7 @@ class LockTests: XCTestCase {
     @available(*, deprecated)
     func testBasics() {
         // FIXME: Make this a more interesting test once we have concurrency primitives.
-        let lock = TSCBasic.Lock()
+        let lock = NSLock()
         var count = 0
         let N = 100
         for _ in 0..<N {

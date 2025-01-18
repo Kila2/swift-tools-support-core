@@ -55,17 +55,3 @@ class StringTests: XCTestCase {
         eq("foo::bar".spm_split(around: "::"), ("foo", "bar"))
     }
 }
-
-class URLTests: XCTestCase {
-    @available(*, deprecated)
-    func testSchema() {
-        XCTAssertEqual(TSCUtility.URL.scheme("http://github.com/foo/bar"), "http")
-        XCTAssertEqual(TSCUtility.URL.scheme("https://github.com/foo/bar"), "https")
-        XCTAssertEqual(TSCUtility.URL.scheme("HTTPS://github.com/foo/bar"), "https")
-        XCTAssertEqual(TSCUtility.URL.scheme("git@github.com/foo/bar"), "git")
-        XCTAssertEqual(TSCUtility.URL.scheme("ssh@github.com/foo/bar"), "ssh")
-        XCTAssertNil(TSCUtility.URL.scheme("github.com/foo/bar"))
-        XCTAssertNil(TSCUtility.URL.scheme("user:/github.com/foo/bar"))
-        XCTAssertNil(TSCUtility.URL.scheme("/path/to/something@2/hello"))
-    }
-}
