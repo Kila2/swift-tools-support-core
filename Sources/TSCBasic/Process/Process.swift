@@ -614,7 +614,7 @@ public final class Process {
             resolvedArgs[0] = executablePath.pathString
         }
         let argv = CStringArray(resolvedArgs)
-        let env = CStringArray(ProcessEnv.block.map({ "\($0.0)=\($0.1)" }))
+        let env = CStringArray(environmentBlock.map({ "\($0.0)=\($0.1)" }))
         let rv = posix_spawnp(&processID, argv.cArray[0]!, &fileActions, &attributes, argv.cArray, env.cArray)
 
         guard rv == 0 else {
