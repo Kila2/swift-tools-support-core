@@ -112,7 +112,7 @@ extension Product {
         }
         completeArgs += args
 
-        return try Process.popen(arguments: completeArgs, environment: environment)
+        return try Process.popen(arguments: completeArgs, environmentBlock: ProcessEnvironmentBlock(environment))
     }
 
     public static func packagePath(for packageName: String, packageRoot: AbsolutePath) throws -> AbsolutePath {

@@ -182,85 +182,6 @@ class ProcessTests: XCTestCase {
         }
     }
 
-  #if !os(Windows) // Signals are not supported in Windows
-    @available(*, deprecated)
-    func testSignals() throws {
-        let processes  = ProcessSet()
-        let group = DispatchGroup()
-
-        DispatchQueue.global().async(group: group) {
-            do {
-                // Test sigint terminates the script.
-                try testWithTemporaryDirectory { tmpdir in
-                    let file = tmpdir.appending(component: "pidfile")
-                    let waitFile = tmpdir.appending(component: "waitFile")
-                    let process = Process(scriptName: "print-pid", arguments: [file.pathString, waitFile.pathString])
-                    try processes.add(process)
-                    try process.launch()
-                    guard waitForFile(waitFile) else {
-                        return XCTFail("Couldn't launch the process")
-                    }
-                    // Ensure process has started running.
-                    guard try Process.running(process.processID) else {
-                       return XCTFail("Couldn't launch the process")
-                    }
-                    process.signal(SIGINT)
-                    try process.waitUntilExit()
-                    // Ensure the process's pid was written.
-                    let contents = try localFileSystem.readFileContents(file).description
-                    XCTAssertEqual("\(process.processID)", contents)
-                    XCTAssertFalse(try Process.running(process.processID))
-                }
-            } catch {
-                XCTFail("\(error)")
-            }
-        }
-
-        // Test SIGKILL terminates the subprocess and any of its subprocess.
-        DispatchQueue.global().async(group: group) {
-            do {
-                try testWithTemporaryDirectory { tmpdir in
-                    let file = tmpdir.appending(component: "pidfile")
-                    let waitFile = tmpdir.appending(component: "waitFile")
-                    let process = Process(scriptName: "subprocess", arguments: [file.pathString, waitFile.pathString])
-                    try processes.add(process)
-                    try process.launch()
-                    guard waitForFile(waitFile) else {
-                        return XCTFail("Couldn't launch the process")
-                    }
-                    // Ensure process has started running.
-                    guard try Process.running(process.processID) else {
-                        return XCTFail("Couldn't launch the process")
-                    }
-                    process.signal(SIGKILL)
-                    let result = try process.waitUntilExit()
-                    XCTAssertEqual(result.exitStatus, .signalled(signal: SIGKILL))
-                    let json = try JSON(bytes: localFileSystem.readFileContents(file))
-                    guard case let .dictionary(dict) = json,
-                          case let .int(parent)? = dict["parent"],
-                          case let .int(child)? = dict["child"] else {
-                        return XCTFail("Couldn't launch the process")
-                    }
-                    XCTAssertEqual(process.processID, ProcessID(parent))
-                    // We should have killed the process and any subprocess spawned by it.
-                    XCTAssertFalse(try Process.running(ProcessID(parent)))
-                    // FIXME: The child process becomes defunct when executing the tests using docker directly without entering the bash.
-                    XCTAssertFalse(try Process.running(ProcessID(child), orDefunct: true))
-                }
-            } catch {
-                XCTFail("\(error)")
-            }
-        }
-
-        if case .timedOut = group.wait(timeout: .now() + 10) {
-            XCTFail("timeout waiting for signals to be processed")
-        }
-
-        // rdar://74356445: make sure the processes are terminated as they *sometimes* cause xctest to hang
-        processes.terminate()
-    }
-  #endif
-
     func testThreadSafetyOnWaitUntilExit() throws {
         let process = Process(args: "echo", "hello")
         try process.launch()
@@ -466,8 +387,8 @@ class ProcessTests: XCTestCase {
 }
 
 fileprivate extension Process {
-    private static func env() -> [String:String] {
-        return ProcessEnv.vars
+    private static func env() -> [ProcessEnvironmentKey:String] {
+        return ProcessEnv.block
     }
 
     private static func script(_ name: String) -> String {
@@ -475,7 +396,7 @@ fileprivate extension Process {
     }
 
     convenience init(scriptName: String, arguments: [String] = [], outputRedirection: OutputRedirection = .collect) {
-        self.init(arguments: [Self.script(scriptName)] + arguments, environment: Self.env(), outputRedirection: outputRedirection)
+        self.init(arguments: [Self.script(scriptName)] + arguments, environmentBlock: Self.env(), outputRedirection: outputRedirection)
     }
 
 //    #if compiler(>=5.8)
@@ -483,19 +404,19 @@ fileprivate extension Process {
 //    #endif
     static func checkNonZeroExit(
         scriptName: String,
-        environment: [String: String] = ProcessEnv.vars,
+        environment: [ProcessEnvironmentKey: String] = ProcessEnv.block,
         loggingHandler: LoggingHandler? = .none
     ) throws -> String {
-        return try checkNonZeroExit(args: script(scriptName), environment: environment, loggingHandler: loggingHandler)
+        return try checkNonZeroExit(args: script(scriptName), environmentBlock: environment, loggingHandler: loggingHandler)
     }
 
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     static func checkNonZeroExit(
         scriptName: String,
-        environment: [String: String] = ProcessEnv.vars,
+        environment: [ProcessEnvironmentKey: String] = ProcessEnv.block,
         loggingHandler: LoggingHandler? = .none
     ) async throws -> String {
-        return try await checkNonZeroExit(args: script(scriptName), environment: environment, loggingHandler: loggingHandler)
+        return try await checkNonZeroExit(args: script(scriptName), environmentBlock: environment, loggingHandler: loggingHandler)
     }
 
 //    #if compiler(>=5.8)
@@ -504,19 +425,19 @@ fileprivate extension Process {
     @discardableResult
     static func popen(
         scriptName: String,
-        environment: [String: String] = ProcessEnv.vars,
+        environment: [ProcessEnvironmentKey: String] = ProcessEnv.block,
         loggingHandler: LoggingHandler? = .none
     ) throws -> ProcessResult {
-        return try popen(arguments: [script(scriptName)], environment: Self.env(), loggingHandler: loggingHandler)
+        return try popen(arguments: [script(scriptName)], environmentBlock: Self.env(), loggingHandler: loggingHandler)
     }
 
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     @discardableResult
     static func popen(
         scriptName: String,
-        environment: [String: String] = ProcessEnv.vars,
+        environment: [ProcessEnvironmentKey: String] = ProcessEnv.block,
         loggingHandler: LoggingHandler? = .none
     ) async throws -> ProcessResult {
-        return try await popen(arguments: [script(scriptName)], environment: Self.env(), loggingHandler: loggingHandler)
+        return try await popen(arguments: [script(scriptName)], environmentBlock: Self.env(), loggingHandler: loggingHandler)
     }
 }

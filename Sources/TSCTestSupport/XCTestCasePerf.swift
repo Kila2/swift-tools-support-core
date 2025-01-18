@@ -20,7 +20,7 @@ import TSCBasic
 open class XCTestCasePerf: XCTestCase {
   #if canImport(Darwin)
     override open class var defaultTestSuite: XCTestSuite {
-        if ProcessEnv.vars.keys.contains("TSC_ENABLE_PERF_TESTS") {
+        if ProcessEnv.block.keys.contains("TSC_ENABLE_PERF_TESTS") {
             return super.defaultTestSuite
         }
         return XCTestSuite(name: String(describing: type(of: self)))

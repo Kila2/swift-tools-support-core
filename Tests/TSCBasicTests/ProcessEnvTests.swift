@@ -16,12 +16,12 @@ import TSCTestSupport
 
 class ProcessEnvTests: XCTestCase {
     func testEnvVars() throws {
-        let key = "SWIFTPM_TEST_FOO"
-        XCTAssertEqual(ProcessEnv.vars[key], nil)
-        try ProcessEnv.setVar(key, value: "BAR")
-        XCTAssertEqual(ProcessEnv.vars[key], "BAR")
-        try ProcessEnv.unsetVar(key)
-        XCTAssertEqual(ProcessEnv.vars[key], nil)
+        let key: ProcessEnvironmentKey = "SWIFTPM_TEST_FOO"
+        XCTAssertEqual(ProcessEnv.block[key], nil)
+        try ProcessEnv.setVar(key.value, value: "BAR")
+        XCTAssertEqual(ProcessEnv.block[key], "BAR")
+        try ProcessEnv.unsetVar(key.value)
+        XCTAssertEqual(ProcessEnv.block[key], nil)
     }
 
     func testChdir() throws {
@@ -37,23 +37,23 @@ class ProcessEnvTests: XCTestCase {
             case someError
         }
 
-        let key = "XCTEST_TEST"
+        let key: ProcessEnvironmentKey = "XCTEST_TEST"
         let value = "TEST"
-        XCTAssertNil(ProcessEnv.vars[key])
+        XCTAssertNil(ProcessEnv.block[key])
         try withCustomEnv([key: value]) {
-            XCTAssertEqual(value, ProcessEnv.vars[key])
+            XCTAssertEqual(value, ProcessEnv.block[key])
         }
-        XCTAssertNil(ProcessEnv.vars[key])
+        XCTAssertNil(ProcessEnv.block[key])
         do {
             try withCustomEnv([key: value]) {
-                XCTAssertEqual(value, ProcessEnv.vars[key])
+                XCTAssertEqual(value, ProcessEnv.block[key])
                 throw CustomEnvError.someError
             }
         } catch CustomEnvError.someError {
         } catch {
             XCTFail("Incorrect error thrown")
         }
-        XCTAssertNil(ProcessEnv.vars[key])
+        XCTAssertNil(ProcessEnv.block[key])
     }
 
     func testEnvironmentKeys() throws {

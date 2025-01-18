@@ -113,7 +113,7 @@ public final class TerminalController {
     /// Computes the terminal type of the stream.
     public static func terminalType(_ stream: LocalFileOutputByteStream) -> TerminalType {
 #if !os(Windows)
-        if ProcessEnv.vars["TERM"] == "dumb" {
+        if ProcessEnv.block["TERM"] == "dumb" {
             return .dumb
         }
 #endif
@@ -135,7 +135,7 @@ public final class TerminalController {
         return Int(csbi.srWindow.Right - csbi.srWindow.Left) + 1
 #else
         // Try to get from environment.
-        if let columns = ProcessEnv.vars["COLUMNS"], let width = Int(columns) {
+        if let columns = ProcessEnv.block["COLUMNS"], let width = Int(columns) {
             return width
         }
 

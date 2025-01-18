@@ -73,11 +73,6 @@ extension ProcessEnvironmentBlock: Sendable {}
 /// Provides functionality related a process's environment.
 public enum ProcessEnv {
 
-    @available(*, deprecated, message: "Use `block` instead")
-    public static var vars: [String:String] {
-      Dictionary<String, String>(uniqueKeysWithValues: _vars.map { ($0.key.value, $0.value) })
-    }
-
     /// Returns a dictionary containing the current environment.
     public static var block: ProcessEnvironmentBlock { _vars }
 
